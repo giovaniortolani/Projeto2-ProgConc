@@ -53,6 +53,12 @@ int main (int argc, char **argv) {
     
     printMatrix(dimension, dimension+1, matrix);
 
+    for (i = 0; i < dimension; i++) {
+        free(matrix[i]);
+        matrix[i] = NULL;
+    }
+    free(matrix);
+    matrix = NULL;
     return 1;
 }
 
