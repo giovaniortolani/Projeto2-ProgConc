@@ -1,10 +1,13 @@
 
-all: gauss
+all: clean gauss
 
-gauss: gauss.c
-	gcc -o gauss.c gauss
+gauss:
+	mpicc gauss.c -o gauss -Wall
+
+clean:
+	rm -rf gauss
 
 run:
-	./gauss
+	mpirun -np 1 ./gauss
 
 	

@@ -7,44 +7,48 @@
 *   9066491 - Jorge Luiz da Silva Vilaça                *
 *   8937308 - Luiz Augusto Vieira Manoel                *
 ********************************************************/
-// #include <mpi.h>
+#include <mpi.h>
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 float** read_matrix(int *dimension);
-void destroy_matrix(int dimension, float ***matrix);
-void swap_line(int line, float ***matrix);
-void pivotize(int line, float ***matrix);
-void scale(int line, float ***matrix);
+void destroy_matrix(int dimension, float **matrix);
+void swap_line(int line, int dimension, float **matrix);
+void pivotize(int line, int dimension, float **matrix);
+void scale(int line, int dimension, float **matrix);
 void print_matrix(int x, int y, float **m);
+void write_result(int dimension, float **matrix);
 
 int main (int argc, char **argv) {
     int i, dimension = 0;
+    int npes, myrank;
     float **matrix;
     
-    matrix = read_matrix(&dimension);
-    print_matrix(dimension, dimension+1, matrix);
-    // destroy_matrix(dimension, &matrix);
-
-    // MPI_Init(&arc, &argv);
-
-    for (i = 0; i < dimension; i++) {
-        if (matrix[i][i] == 0) swap_line(i, &matrix);
-        pivotize(i, &matrix);
-        scale(i, &matrix);
-    }
 
 
-    // MPI_Finalize();
+	matrix = read_matrix(&dimension);
+
+	MPI_Status status;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &npes);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     for (i = 0; i < dimension; i++) {
-        free(matrix[i]);
-        matrix[i] = NULL;
+        if (matrix[i][i] == 0) swap_line(i, dimension, matrix);
+        pivotize(i, dimension, matrix);
+        scale(i, dimension, matrix);
     }
-    free(matrix);
-    matrix = NULL;
+    
+    //for debugging purposes
+	//print_matrix(dimension, dimension+1, matrix);
 
+	write_result(dimension, matrix);
+
+	destroy_matrix(dimension, matrix);
+
+	MPI_Finalize();
+	
     return 0;
 }
 
@@ -87,27 +91,73 @@ float** read_matrix(int *dimension) {
     return matrix;
 }
 
-void destroy_matrix(int dimension, float ***matrix) {
+void destroy_matrix(int dimension, float **matrix) {
     int i;
     printf("%d", dimension);
     
     for (i = 0; i < dimension; i++) {
-        free(*matrix[i]);
+        free(matrix[i]);
     }
-    printf("rfghjn");
-    free(*matrix);
+    free(matrix);
 }
 
-void swap_line(int line, float ***matrix) {
+void swap_line(int line, int dimension, float **matrix) {
 
+	int swap = 0;
+	int aux;
+	int i;
+
+	if (matrix[line][line] == 0){
+		//if you jave to swap the lines
+		for (i = 0; i < dimension; i++){
+			if (matrix[i][line] != 0){
+				swap = i;
+				break;
+			}
+			//find a swappable line
+		}
+				
+		//swap them
+		for (i = 0; i <= dimension; i++){
+			aux = matrix[line][i];
+			matrix[line][i] = matrix[swap][i];
+			matrix[swap][i] = aux;
+		}
+		
+		
+	}
 }
 
-void pivotize(int line, float ***matrix) {
+void pivotize(int line, int dimension, float **matrix) {
+    
+    float div = matrix[line][line];
+    int i;
+    
+    for (i = 0; i <= dimension; i++){
+		matrix[line][i] /= div;
+	}
     
 }
 
-void scale(int line, float ***matrix) {
+void scale(int line, int dimension, float **matrix) {
     
+    int i, j;
+    float *vet = (float*) malloc (sizeof(float) * dimension);
+    
+    for (i = 0; i < dimension; i++){
+		vet[i] = matrix[i][line];
+	}
+    
+    for (i = 0; i < dimension; i++){
+	
+		if (i != line){
+			
+			for (j = 0; j <= dimension; j++){
+			
+					matrix[i][j] -= vet[i] * matrix[line][j];
+			}
+		}
+	}
 }
 
 void print_matrix(int x, int y, float **m) {
@@ -118,4 +168,14 @@ void print_matrix(int x, int y, float **m) {
         }
         printf("\n");
     }
+}
+
+void write_result(int dimension, float **matrix){
+	
+	FILE *arq = fopen("out/resultado.txt", "w");
+	int i;
+	
+	for (i = 0; i < dimension; i++){
+		fprintf(arq, "%f\n", matrix[i][dimension]);
+	}
 }
