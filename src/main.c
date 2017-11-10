@@ -15,10 +15,13 @@
 #include "gauss.h"
 #include "matrix.h"
 
-// Para rodar com a matriz do professor. 
-// $ make run
-// Para rodar com uma matriz de dimensao N criada por nos.
-// $ make run DIM=<N>
+/* 
+    Para rodar com a matriz do professor. 
+        $ make run
+    Para rodar com uma matriz de dimensao N criada por nos.
+        $ make run DIM=<N>
+        Ex: $ make run DIM=4
+*/
 
 // LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
 
