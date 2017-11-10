@@ -1,0 +1,11 @@
+- O formato dos arquivos de entrada e saída devem ser respeitados, porém o tratamento da matriz e do vetor resultante dentro do programa fica a critério do aluno (Ex: pode-se ler os arquivos direto do terminal, tratando os input, ou utilizar funções de leitura do C (fscanf, fgets,…), e atribuir os input para quaisquer estruturas de dados); 
+
+- O arquivo de saída deve retornar os valores das variáveis na ordem original do sistema linear. Assim, se houverem troca de linhas, o arquivo de saída ainda deve conter os valores na ordem original. (x1,x2,x3,…,xn); 
+
+- As dimensões da matriz (1.000, 5.000 e 10.000) referem-se a matrizes quadradas de tamanho (1.000*1.000, 5.000*5.000, 10.000*10.000); 
+
+- Pode-se considerar matrizes de coeficientes quadradas, que possuem o mesmo número de equações (linhas) e incógnitas (colunas); 
+
+- Pode-se considerar somente a resolução de sistemas possíveis e determinados (onde não há linhas ou colunas múltiplas/inteiramente formadas por zero); 
+
+-Os grupos que implementarem soluções mais complexas (que sejam capazes de solucionar sistemas indeterminados/impossíveis e/ou tratar matrizes retangulares) serão bonificados na pontuação, porém aqueles que atenderem às especificações sugeridas já terão a nota pertinente (não serão penalizados). Recomenda-se que, para o teste da aplicação, seja considerada uma matriz preenchida com valores sequenciais, de forma a garantir que linhas ou colunas não sejam múltiplas;
