@@ -44,11 +44,11 @@ void swap_line(int line, int dimension, float **matrix) {
 
 void pivotize(int line, int dimension, float **matrix) {
     
-    float div = matrix[line][line];
+    float divisor = matrix[line][line];
     int i;
     
-    for (i = 0; i <= dimension; i++){
-		matrix[line][i] /= div;
+    for (i = 0; i <= dimension; i++) {
+		matrix[line][i] /= divisor;
 	}
     
 }

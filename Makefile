@@ -5,5 +5,6 @@ clean:
 	@rm -rf *.o *~ bin/*
 
 run:
-	@mpirun -np 1 ./bin/gaussjordan
+	@mpirun -np 1 ./bin/gaussjordan ${DIM}
+
 

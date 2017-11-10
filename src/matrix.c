@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <mpi.h>
 #include <omp.h>
 #include "matrix.h"
@@ -47,6 +48,43 @@ float** read_matrix(int *dimension) {
     for (i = 0; i < *dimension; i++) {
         fscanf(arrayInput, "%f", &matrix[i][*dimension]);
     }
+    fclose(matrixInput);
+    fclose(arrayInput);
+
+    return matrix;
+}
+
+/*
+ *  Usa um rand pra gerar os numeros entre 0 e 50, toda execucao gera o mesmo numero.
+ */ 
+float** create_matrix(int dimension) {
+
+    int i, j;
+    float **matrix;
+    FILE *matrixInput, *arrayInput;
+
+    matrixInput = fopen("in/matriz_maior.txt", "w");
+    arrayInput= fopen("in/vetor_maior.txt", "w");
+    if (matrixInput == NULL || arrayInput == NULL) {
+        printf("Erro ao abrir arquivos\n");
+        exit (1);
+    }
+
+    matrix = (float **) malloc(sizeof(float*) * dimension);
+    for (i = 0; i < dimension; i++) {
+        matrix[i] = (float*) malloc(sizeof(float) * (dimension + 1));
+        for (j = 0; j < dimension + 1; j++) {
+            matrix[i][j] = rand() % 50;
+            if (j != dimension) { 
+                fprintf(matrixInput, "%.4f ", matrix[i][j]);            
+            }
+            else {
+                fprintf(arrayInput, "%.4f\n", matrix[i][j]);
+                fprintf(matrixInput, "\n");            
+            }
+        }
+    }
+
     fclose(matrixInput);
     fclose(arrayInput);
 
