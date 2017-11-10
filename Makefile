@@ -1,13 +1,9 @@
-
-all: clean gauss
-
-gauss:
-	mpicc gauss.c -o gauss -Wall
+all:
+	@mpicc src/main.c src/gauss.c src/matrix.c -o bin/gaussjordan -fopenmp -Wall 
 
 clean:
-	rm -rf gauss
+	@rm -rf *.o *~ bin/*
 
 run:
-	mpirun -np 1 ./gauss
+	@mpirun -np 1 ./bin/gaussjordan
 
-	
