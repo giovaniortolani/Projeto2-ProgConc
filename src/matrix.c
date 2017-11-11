@@ -15,9 +15,9 @@
 #include <omp.h>
 #include "matrix.h"
 
-float** read_matrix(int *dimension) {
+float* read_matrix(int *dimension) {
     int i, j;
-    float **matrix;
+    float *matrix;
     FILE *matrixInput, *arrayInput;
 
     matrixInput = fopen("in/matriz.txt", "r");
@@ -34,20 +34,17 @@ float** read_matrix(int *dimension) {
     }
     rewind(arrayInput);
     // Aloca dinamicamente matriz que vai conter os dados
-    matrix = (float**) malloc(sizeof(float*) * (*dimension));
-    for (i = 0; i < *dimension; i++) {
-        matrix[i] = (float*) malloc(sizeof(float) * (*dimension + 1));
-    }
+    matrix = (float*) malloc(sizeof(float) * (*dimension) * (*dimension + 1));
+   
     // Recebe a matriz
     for (i = 0; i < *dimension; i++) {
         for (j = 0; j < *dimension; j++) {
-            fscanf(matrixInput, "%f", &matrix[i][j]);
+            fscanf(matrixInput, "%f", &matrix[i * (*dimension + 1) + j]);
         }
+        fscanf(arrayInput, "%f", &matrix[i * (*dimension + 1) + j]);
     }
     // Recebe o vetor no ultima coluna da matriz
-    for (i = 0; i < *dimension; i++) {
-        fscanf(arrayInput, "%f", &matrix[i][*dimension]);
-    }
+   
     fclose(matrixInput);
     fclose(arrayInput);
 
@@ -57,10 +54,10 @@ float** read_matrix(int *dimension) {
 /*
  *  Usa um rand pra gerar os numeros entre 0 e 50, toda execucao gera o mesmo numero.
  */ 
-float** create_matrix(int dimension) {
+float* create_matrix(int dimension) {
 
     int i, j;
-    float **matrix;
+    float *matrix;
     FILE *matrixInput, *arrayInput;
 
     matrixInput = fopen("in/matriz_maior.txt", "w");
@@ -70,16 +67,15 @@ float** create_matrix(int dimension) {
         exit (1);
     }
 
-    matrix = (float **) malloc(sizeof(float*) * dimension);
+    matrix = (float *) malloc(sizeof(float) * dimension * (dimension + 1));
     for (i = 0; i < dimension; i++) {
-        matrix[i] = (float*) malloc(sizeof(float) * (dimension + 1));
         for (j = 0; j < dimension + 1; j++) {
-            matrix[i][j] = rand() % 50;
+            matrix[i * (dimension + 1) + j] = rand() % 50;
             if (j != dimension) { 
-                fprintf(matrixInput, "%.4f ", matrix[i][j]);            
+                fprintf(matrixInput, "%.4f ", matrix[i * (dimension + 1) + j]);            
             }
             else {
-                fprintf(arrayInput, "%.4f\n", matrix[i][j]);
+                fprintf(arrayInput, "%.4f\n", matrix[i * (dimension + 1) + j]);
                 fprintf(matrixInput, "\n");            
             }
         }
@@ -91,31 +87,26 @@ float** create_matrix(int dimension) {
     return matrix;
 }
 
-void destroy_matrix(int dimension, float **matrix) {
-    int i;
-    
-    for (i = 0; i < dimension; i++) {
-        free(matrix[i]);
-    }
+void destroy_matrix(float *matrix) {
     free(matrix);
 }
 
-void print_matrix(int x, int y, float **m) {
+void print_matrix(int dimension, float *m) {
     int i, j;
-    for (i = 0; i < x; i++) {
-        for (j = 0; j < y; j++) {
-            printf("%f ", m[i][j]);
+    for (i = 0; i < dimension; i++) {
+        for (j = 0; j <= dimension; j++) {
+            printf("%f ", m[i * (dimension + 1) + j]);
         }
         printf("\n");
     }
 }
 
-void write_result(int dimension, float **matrix){
+void write_result(int dimension, float *matrix){
     
     FILE *arq = fopen("out/resultado.txt", "w");
     int i;
     
     for (i = 0; i < dimension; i++){
-        fprintf(arq, "%f\n", matrix[i][dimension]);
+        fprintf(arq, "%f\n", matrix[i * (dimension + 1) + dimension]);
     }
 }

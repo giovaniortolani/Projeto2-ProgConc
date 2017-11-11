@@ -28,7 +28,7 @@
 int main (int argc, char **argv) {
     int i, dimension = 0;
     int npes, myrank;
-    float **matrix;
+    float *matrix;
     
     printf("%d\n", argc);
     if (argc == 1) {
@@ -45,17 +45,17 @@ int main (int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     for (i = 0; i < dimension; i++) {
-        if (matrix[i][i] == 0) swap_line(i, dimension, matrix);
+        if (matrix[i * (dimension + 1) + i] == 0) swap_line(i, dimension, matrix);
         pivotize(i, dimension, matrix);
         scale(i, dimension, matrix);
     }
     
     //for debugging purposes
-    print_matrix(dimension, dimension+1, matrix);
+    print_matrix(dimension, matrix);
 
     write_result(dimension, matrix);
 
-    destroy_matrix(dimension, matrix);
+    destroy_matrix(matrix);
 
     MPI_Finalize();
     

@@ -15,16 +15,16 @@
 #include "gauss.h"
 #include "matrix.h"
 
-void swap_line(int line, int dimension, float **matrix) {
+void swap_line(int line, int dimension, float *matrix) {
 
 	int swap = 0;
 	int aux;
 	int i;
 
-	if (matrix[line][line] == 0){
+	if (matrix[line * (dimension + 1) + line] == 0){
 		//if you jave to swap the lines
 		for (i = 0; i < dimension; i++){
-			if (matrix[i][line] != 0){
+			if (matrix[i * (dimension + 1) + line] != 0){
 				swap = i;
 				break;
 			}
@@ -33,33 +33,33 @@ void swap_line(int line, int dimension, float **matrix) {
 				
 		//swap them
 		for (i = 0; i <= dimension; i++){
-			aux = matrix[line][i];
-			matrix[line][i] = matrix[swap][i];
-			matrix[swap][i] = aux;
+			aux = matrix[line * (dimension + 1) + i];
+			matrix[line * (dimension + 1) + i] = matrix[swap * (dimension + 1) + i];
+			matrix[swap * (dimension + 1) + i] = aux;
 		}
 		
 		
 	}
 }
 
-void pivotize(int line, int dimension, float **matrix) {
+void pivotize(int line, int dimension, float *matrix) {
     
-    float divisor = matrix[line][line];
+    float divisor = matrix[line * (dimension + 1) + line];
     int i;
     
     for (i = 0; i <= dimension; i++) {
-		matrix[line][i] /= divisor;
+		matrix[line * (dimension + 1) + i] /= divisor;
 	}
     
 }
 
-void scale(int line, int dimension, float **matrix) {
+void scale(int line, int dimension, float *matrix) {
     
     int i, j;
     float *vet = (float*) malloc (sizeof(float) * dimension);
     
     for (i = 0; i < dimension; i++){
-		vet[i] = matrix[i][line];
+		vet[i] = matrix[i * (dimension + 1) + line];
 	}
     
     for (i = 0; i < dimension; i++){
@@ -68,9 +68,11 @@ void scale(int line, int dimension, float **matrix) {
 			
 			for (j = 0; j <= dimension; j++){
 			
-					matrix[i][j] -= vet[i] * matrix[line][j];
+					matrix[i * (dimension + 1) + j] -= vet[i] * matrix[line * (dimension + 1) + j];
 			}
 		}
 	}
+
+	free(vet);
 }
 
