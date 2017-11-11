@@ -18,9 +18,9 @@
 /* 
     Para rodar com a matriz do professor. 
         $ make run
-    Para rodar com uma matriz de dimensao N criada por nos.
-        $ make run DIM=<N>
-        Ex: $ make run DIM=4
+    Para rodar com uma matriz de dimensao N com M processos.
+        $ make run NPES=<M> DIM=<N>
+        Ex: $ make run NPES=2 DIM=4
 */
 
 // LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
@@ -59,12 +59,12 @@ int main (int argc, char **argv) {
     count = dimension * groupSize;
     MPI_Scatter(matrix, count, MPI_FLOAT, myCols, count, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    if (myrank == 1){
-        for (i = 0; i < (groupSize * dimension); i++) {
-            printf("%f, ", myCols[i]);
-        }
-        printf("\n");
-    }
+    // if (myrank == 1){
+    //     for (i = 0; i < (groupSize * dimension); i++) {
+    //         printf("%f, ", myCols[i]);
+    //     }
+    //     printf("\n");
+    // }
     
     for (i = 0; i < dimension; i++) {
         if (matrix[i * (dimension + 1) + i] == 0) swap_line(i, dimension, matrix);
