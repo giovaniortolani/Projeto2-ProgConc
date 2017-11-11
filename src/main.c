@@ -57,15 +57,15 @@ int main (int argc, char **argv) {
     myCols = create_local_cols(groupSize, dimension);
 
     count = dimension * groupSize;
-    MPI_Scatter(matrix, count, MPI_FLOAT, &myCols, count, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Scatter(matrix, count, MPI_FLOAT, myCols, count, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    // if (!myrank){
-    //     for (i = 0; i < (groupSize * dimension); i++) {
-    //         printf("%f, ", myCols[i]);
-    //     }
-    //     printf("\n");
-    // }
-
+    if (myrank == 1){
+        for (i = 0; i < (groupSize * dimension); i++) {
+            printf("%f, ", myCols[i]);
+        }
+        printf("\n");
+    }
+    
     for (i = 0; i < dimension; i++) {
         if (matrix[i * (dimension + 1) + i] == 0) swap_line(i, dimension, matrix);
         pivotize(i, dimension, matrix);
@@ -73,13 +73,12 @@ int main (int argc, char **argv) {
     }
 
     //for debugging purposes
-    print_matrix(dimension, matrix);
+    // print_matrix(dimension, matrix);
 
     write_result(dimension, matrix);
 
     destroy_matrix(matrix);
     destroy_local_cols(myCols);
-
     MPI_Finalize();
     
     return 0;
