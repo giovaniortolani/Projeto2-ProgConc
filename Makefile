@@ -10,8 +10,3 @@ clean:
 run:
 	@mpirun -np ${NPES} ./bin/gaussjordan ${DIM}
 	$(info NPES="$(NPES)", DIM="$(DIM)")
-<<<<<<< HEAD
-=======
-
->>>>>>> a33f31e5bb311297b29962dc0e285457aa937b11
-
