@@ -26,28 +26,38 @@
 // LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
 
 int main (int argc, char **argv) {
-    int dimension = 0, groupSize, count;
+    int dimension = 0, groupSize, count, i;
     int npes, myrank;
     float *matrix, *myCols;
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
     
-    if (argc == 1) {
-        matrix = read_matrix(&dimension);
-    } else {
-        dimension = atoi(argv[1]);
-        matrix = create_matrix(dimension);
-    }
-
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
-    if (dimension % npes != 0) {
-        printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
-        fflush(0);
-        MPI_Finalize();
-        exit(1);
+    if (myrank == 0) {
+        if (argc == 1) {
+            matrix = read_matrix(&dimension);
+            if (dimension % npes != 0) {
+                printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
+                destroy_matrix(matrix);
+                fflush(0);
+                MPI_Finalize();
+                exit(1);
+            }
+        } else {
+            dimension = atoi(argv[1]);
+            if (dimension % npes != 0) {
+                printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
+                fflush(0);
+                MPI_Finalize();
+                exit(1);
+            }
+            matrix = create_matrix(dimension);
+        }
     }
+    MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
     groupSize = dimension / npes;
 
     // Cria matriz (em forma de vetor) onde um processo recebe suas colunas
@@ -68,12 +78,12 @@ int main (int argc, char **argv) {
     MPI_Scatter(matrix, count, sendColType, myCols, count, recvColType, 0, MPI_COMM_WORLD);
 
     // Debug
-    // if (myrank == 0){
-    //     for (i = 0; i < (groupSize * dimension); i++) {
-    //         printf("%f, ", myCols[i]);
-    //     }
-    //     printf("\n");
-    // }
+    if (myrank == 0){
+        for (i = 0; i < (groupSize * dimension); i++) {
+            printf("%f, ", myCols[i]);
+        }
+        printf("\n");
+    }
 
     // Solução Paralela
     solution(myCols, dimension, npes, myrank);
@@ -83,9 +93,10 @@ int main (int argc, char **argv) {
     //for debugging purposes
     // print_matrix(dimension, matrix);
 
-    write_result(dimension, matrix);
-
-    destroy_matrix(matrix);
+    if (myrank == 0) {
+        write_result(dimension, matrix);
+        destroy_matrix(matrix);
+    }
     destroy_local_cols(myCols);
     MPI_Finalize();
     

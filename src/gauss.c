@@ -61,13 +61,16 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 
 			if (pivotCol[k] == 0) { 				// swap lines
 				for (i = 0; i < dimension; i++) {	// procura novo pivot não nulo
-					if (pivotCol[i] != 0) pivotIdx = i;
+					if (pivotCol[i] != 0) {
+						pivotIdx = i;
+					}
 				}
 			}
+
 		}
 		// Bcast do indice do pivô atual (pivotIdx)
 		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
-		root = myrank;
+		root = proccess_of_column(k, npes);
 		MPI_Bcast(&pivotIdx, 1, MPI_INT, root, MPI_COMM_WORLD);
 
 		if (pivotIdx != k) {	// Necessidade de trocar o pivot
