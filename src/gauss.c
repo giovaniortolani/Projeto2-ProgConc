@@ -34,12 +34,12 @@ void scale() {
 
 }
 
-int proccess_of_column(int column, int npes) {
-	return (column / npes);
+int proccess_of_column(int column, int npes, int dimension) {
+	return (column * npes / dimension);
 }
 
-int my_column(int column, int npes, int myrank) {
-	if (proccess_of_column(column, npes) == myrank) return 1;
+int my_column(int column, int dimension, int npes, int myrank) {
+	if (proccess_of_column(column, npes, dimension) == myrank) return 1;
 	return 0;
 }
 
@@ -49,7 +49,7 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 	pivotCol = (float*) calloc(dimension, sizeof(float));
 
 	for (k = 0; k < dimension; k++) {
-		if (my_column(k, npes, myrank)) {	// Processo corrente tem pivot atual
+		if (my_column(k, dimension, npes, myrank)) {	// Processo corrente tem pivot atual
 			pivotIdx = k;
 			psize = dimension / npes;
 			innerOffset = k % psize;
@@ -70,7 +70,7 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 		}
 		// Bcast do indice do pivô atual (pivotIdx)
 		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
-		root = proccess_of_column(k, npes);
+		root = proccess_of_column(k, npes, dimension);
 		MPI_Bcast(&pivotIdx, 1, MPI_INT, root, MPI_COMM_WORLD);
 
 		if (pivotIdx != k) {	// Necessidade de trocar o pivot
