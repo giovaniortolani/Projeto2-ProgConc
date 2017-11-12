@@ -1,3 +1,6 @@
+NPES=2
+DIM=4
+
 all:
 	@mpicc src/main.c src/gauss.c src/matrix.c -o bin/gaussjordan -fopenmp -Wall 
 
@@ -5,6 +8,7 @@ clean:
 	@rm -rf *.o *~ bin/*
 
 run:
-	@mpirun -np 1 ./bin/gaussjordan ${DIM}
+	@mpirun -np ${NPES} ./bin/gaussjordan ${DIM}
+	$(info NPES="$(NPES)", DIM="$(DIM)")
 
 

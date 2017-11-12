@@ -75,4 +75,3 @@ void scale(int line, int dimension, float *matrix) {
 
 	free(vet);
 }
-

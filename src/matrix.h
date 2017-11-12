@@ -7,4 +7,7 @@ void destroy_matrix(float *matrix);
 void print_matrix(int dimension, float *m);
 void write_result(int dimension, float *matrix);
 
+float* create_local_cols(int colsNum, int dimension);
+void destroy_local_cols(float *cols);
+
 #endif
