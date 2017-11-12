@@ -1,8 +1,8 @@
 #ifndef GAUSS_H
 #define GAUSS_H
 
-void swap_line(int line, int dimension, float *matrix);
-void pivotize(int line, int dimension, float *matrix);
-void scale(int line, int dimension, float *matrix);
+float* initialize(float *matrix, int dimension, int *npes, int *myrank);
+void destroy_local_cols(float *cols);
+void solution_sequential(float *matrix, int dimension);
 
 #endif

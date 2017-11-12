@@ -110,13 +110,3 @@ void write_result(int dimension, float *matrix){
         fprintf(arq, "%f\n", matrix[i * (dimension + 1) + dimension]);
     }
 }
-
-float* create_local_cols(int colsNum, int dimension) {
-    float *myCols;
-    myCols = (float *) calloc(colsNum * dimension, sizeof(float));
-    return myCols;
-}
-
-void destroy_local_cols(float *cols) {
-    free(cols);
-}

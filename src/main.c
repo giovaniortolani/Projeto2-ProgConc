@@ -26,64 +26,23 @@
 // LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
 
 int main (int argc, char **argv) {
-    int i, dimension = 0, groupSize, count;
-    int npes, myrank;
+    int dimension = 0, npes, myrank;
     float *matrix, *myCols;
 
-    MPI_Status status;
-    MPI_Datatype sendCol, sendColType, recvCol, recvColType;
-    
-    printf("%d\n", argc);
     if (argc == 1) {
         matrix = read_matrix(&dimension);
-    }
-    else {
+    } else {
         dimension = atoi(argv[1]);
         matrix = create_matrix(dimension);
     }
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &npes);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
-    if (dimension % npes != 0) {
-        printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
-        fflush(0);
-        MPI_Finalize();
-        exit(1);
-    }
-    groupSize = dimension / npes;
+    // Cada processo recebe sua "parte" do problema
+    myCols = initialize(matrix, dimension, &npes, &myrank);
 
-    // Cria matriz (em forma de vetor) onde um processo recebe suas colunas
-    myCols = create_local_cols(groupSize, dimension);
-
-    // Cria os tipos de dados para obter coluna das matrizes representadas em vetores
-    // O stride para receber é diferente para enviar (só p0 envia)
-    if (!myrank) {
-        MPI_Type_vector(dimension, 1, dimension + 1, MPI_FLOAT, &sendCol);
-        MPI_Type_commit(&sendCol);
-        MPI_Type_create_resized(sendCol, 0, sizeof(float), &sendColType);
-    }
-    MPI_Type_vector(dimension, 1, groupSize, MPI_FLOAT, &recvCol);
-    MPI_Type_commit(&recvCol);
-    MPI_Type_create_resized(recvCol, 0, sizeof(float), &recvColType);
-
-    count = groupSize;
-    MPI_Scatter(matrix, count, sendColType, myCols, count, recvColType, 0, MPI_COMM_WORLD);
-
-    // Debug
-    // if (myrank == 0){
-    //     for (i = 0; i < (groupSize * dimension); i++) {
-    //         printf("%f, ", myCols[i]);
-    //     }
-    //     printf("\n");
-    // }
-    
-    for (i = 0; i < dimension; i++) {
-        if (matrix[i * (dimension + 1) + i] == 0) swap_line(i, dimension, matrix);
-        pivotize(i, dimension, matrix);
-        scale(i, dimension, matrix);
-    }
+    // Solução Sequencial
+    solution_sequential(matrix, dimension);
 
     //for debugging purposes
     // print_matrix(dimension, matrix);

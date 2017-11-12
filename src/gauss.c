@@ -15,7 +15,47 @@
 #include "gauss.h"
 #include "matrix.h"
 
-void swap_line(int line, int dimension, float *matrix) {
+float* initialize(float *matrix, int dimension, int *npes, int *myrank) {
+	int groupSize, count;
+	float *cols;
+    MPI_Datatype sendCol, sendColType, recvCol, recvColType;
+
+    MPI_Comm_size(MPI_COMM_WORLD, npes);
+    MPI_Comm_rank(MPI_COMM_WORLD, myrank);
+
+    if (dimension % (*npes) != 0) {
+        printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
+        fflush(0);
+        MPI_Finalize();
+        exit(1);
+    }
+    groupSize = dimension / (*npes);
+
+    // Cria matriz (em forma de vetor) onde um processo recebe suas colunas
+    cols = (float *) calloc(groupSize * dimension, sizeof(float));
+
+    // Cria os tipos de dados para obter coluna das matrizes representadas em vetores
+    // O stride para receber é diferente para enviar (só p0 envia)
+    if (!myrank) {
+        MPI_Type_vector(dimension, 1, dimension + 1, MPI_FLOAT, &sendCol);
+        MPI_Type_commit(&sendCol);
+        MPI_Type_create_resized(sendCol, 0, sizeof(float), &sendColType);
+    }
+    MPI_Type_vector(dimension, 1, groupSize, MPI_FLOAT, &recvCol);
+    MPI_Type_commit(&recvCol);
+    MPI_Type_create_resized(recvCol, 0, sizeof(float), &recvColType);
+
+    count = groupSize;
+    // MPI_Scatter(matrix, count, sendColType, cols, count, recvColType, 0, MPI_COMM_WORLD);
+
+	return cols;
+}
+
+void destroy_local_cols(float *cols) {
+    free(cols);
+}
+
+void swap_line_sequential(int line, int dimension, float *matrix) {
 
 	int swap = 0;
 	int aux;
@@ -42,7 +82,7 @@ void swap_line(int line, int dimension, float *matrix) {
 	}
 }
 
-void pivotize(int line, int dimension, float *matrix) {
+void pivotize_sequential(int line, int dimension, float *matrix) {
     
     float divisor = matrix[line * (dimension + 1) + line];
     int i;
@@ -53,7 +93,7 @@ void pivotize(int line, int dimension, float *matrix) {
     
 }
 
-void scale(int line, int dimension, float *matrix) {
+void scale_sequential(int line, int dimension, float *matrix) {
     
     int i, j;
     float *vet = (float*) malloc (sizeof(float) * dimension);
@@ -74,4 +114,14 @@ void scale(int line, int dimension, float *matrix) {
 	}
 
 	free(vet);
+}
+
+void solution_sequential(float *matrix, int dimension) {
+	int i;
+
+	for (i = 0; i < dimension; i++) {
+        if (matrix[i * (dimension + 1) + i] == 0) swap_line_sequential(i, dimension, matrix);
+        pivotize_sequential(i, dimension, matrix);
+        scale_sequential(i, dimension, matrix);
+    }
 }
