@@ -74,14 +74,16 @@ int main (int argc, char **argv) {
     //     }
     //     printf("\n");
     // }
-   
+
+    // Solução Paralela
+    solution(myCols, dimension, npes, myrank);
     // Solução Sequencial
-    solution_sequential(matrix, dimension);
+    // solution_sequential(matrix, dimension);
 
     //for debugging purposes
     // print_matrix(dimension, matrix);
 
-    write_result(dimension, matrix);
+    // write_result(dimension, matrix);
 
     destroy_matrix(matrix);
     destroy_local_cols(myCols);

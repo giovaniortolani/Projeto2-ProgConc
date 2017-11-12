@@ -15,6 +15,71 @@
 #include "gauss.h"
 #include "matrix.h"
 
+void swap_lines(float *myCols, int psize, int oldPivot, int newPivot) {
+	int i, row, aux;
+
+	for (i = 0; i < psize; i++) {
+		row = i * psize;
+		aux = myCols[row + oldPivot];
+		myCols[row + oldPivot] = myCols[row + newPivot];
+		myCols[row + newPivot] = aux;
+	}
+}
+
+void pivotize() {
+
+}
+
+void scale() {
+
+}
+
+int proccess_of_column(int column, int npes) {
+	return (column / npes);
+}
+
+int my_column(int column, int npes, int myrank) {
+	if (proccess_of_column(column, npes) == myrank) return 1;
+	return 0;
+}
+
+void solution(float *myCols, int dimension, int npes, int myrank) {
+	int i, k, psize, innerOffset, pivotIdx, root;
+	float *pivotCol;
+	pivotCol = (float*) calloc(dimension, sizeof(float));
+
+	for (k = 0; k < dimension; k++) {
+		if (my_column(k, npes, myrank)) {	// Processo corrente tem pivot atual
+			pivotIdx = k;
+			psize = dimension / npes;
+			innerOffset = k % psize;
+			
+			// Copia a coluna pivô para um vetor unico;
+			for (i = 0; i < dimension; i++) {
+				pivotCol[i] = myCols[i * psize + innerOffset];
+			}
+
+			if (pivotCol[k] == 0) { 				// swap lines
+				for (i = 0; i < dimension; i++) {	// procura novo pivot não nulo
+					if (pivotCol[i] != 0) pivotIdx = i;
+				}
+			}
+		}
+		// Bcast do indice do pivô atual (pivotIdx)
+		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
+		root = myrank;
+		MPI_Bcast(&pivotIdx, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+		if (pivotIdx != k) {	// Necessidade de trocar o pivot
+			swap_lines(myCols, psize, k, pivotIdx);
+		}
+
+		pivotize();
+		scale();
+
+	}
+}
+
 void swap_line_sequential(int line, int dimension, float *matrix) {
 
 	int swap = 0;
