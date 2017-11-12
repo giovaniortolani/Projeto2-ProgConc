@@ -32,14 +32,14 @@ void pivotize() {
 
 void scale() {
 
-}
+}dimension
 
-int proccess_of_column(int column, int npes, int dimension) {
+int process_of_column(int column, int npes, int dimension) {
 	return (column * npes / dimension);
 }
 
 int my_column(int column, int dimension, int npes, int myrank) {
-	if (proccess_of_column(column, npes, dimension) == myrank) return 1;
+	if (process_of_column(column, npes, dimension) == myrank) return 1;
 	return 0;
 }
 
@@ -70,7 +70,7 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 		}
 		// Bcast do indice do pivô atual (pivotIdx)
 		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
-		root = proccess_of_column(k, npes, dimension);
+		root = process_of_column(k, npes, dimension);
 		MPI_Bcast(&pivotIdx, 1, MPI_INT, root, MPI_COMM_WORLD);
 
 		if (pivotIdx != k) {	// Necessidade de trocar o pivot
