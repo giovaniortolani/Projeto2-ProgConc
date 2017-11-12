@@ -26,18 +26,14 @@
 // LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
 
 int main (int argc, char **argv) {
-    int i, dimension = 0, groupSize, count;
+    int dimension = 0, groupSize, count;
     int npes, myrank;
     float *matrix, *myCols;
-
-    MPI_Status status;
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
     
-    printf("%d\n", argc);
     if (argc == 1) {
         matrix = read_matrix(&dimension);
-    }
-    else {
+    } else {
         dimension = atoi(argv[1]);
         matrix = create_matrix(dimension);
     }
@@ -78,12 +74,9 @@ int main (int argc, char **argv) {
     //     }
     //     printf("\n");
     // }
-    
-    for (i = 0; i < dimension; i++) {
-        if (matrix[i * (dimension + 1) + i] == 0) swap_line(i, dimension, matrix);
-        pivotize(i, dimension, matrix);
-        scale(i, dimension, matrix);
-    }
+   
+    // Solução Sequencial
+    solution_sequential(matrix, dimension);
 
     //for debugging purposes
     // print_matrix(dimension, matrix);
