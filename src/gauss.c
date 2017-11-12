@@ -15,7 +15,7 @@
 #include "gauss.h"
 #include "matrix.h"
 
-void swap_line(int line, int dimension, float *matrix) {
+void swap_line_sequential(int line, int dimension, float *matrix) {
 
 	int swap = 0;
 	int aux;
@@ -42,7 +42,7 @@ void swap_line(int line, int dimension, float *matrix) {
 	}
 }
 
-void pivotize(int line, int dimension, float *matrix) {
+void pivotize_sequential(int line, int dimension, float *matrix) {
     
     float divisor = matrix[line * (dimension + 1) + line];
     int i;
@@ -53,7 +53,7 @@ void pivotize(int line, int dimension, float *matrix) {
     
 }
 
-void scale(int line, int dimension, float *matrix) {
+void scale_sequential(int line, int dimension, float *matrix) {
     
     int i, j;
     float *vet = (float*) malloc (sizeof(float) * dimension);
@@ -74,4 +74,14 @@ void scale(int line, int dimension, float *matrix) {
 	}
 
 	free(vet);
+}
+
+void solution_sequential(float *matrix, int dimension) {
+	int i;
+
+	for (i = 0; i < dimension; i++) {
+        if (matrix[i * (dimension + 1) + i] == 0) swap_line_sequential(i, dimension, matrix);
+        pivotize_sequential(i, dimension, matrix);
+        scale_sequential(i, dimension, matrix);
+    }
 }
