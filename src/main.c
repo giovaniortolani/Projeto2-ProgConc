@@ -83,7 +83,7 @@ int main (int argc, char **argv) {
     //for debugging purposes
     // print_matrix(dimension, matrix);
 
-    // write_result(dimension, matrix);
+    write_result(dimension, matrix);
 
     destroy_matrix(matrix);
     destroy_local_cols(myCols);
