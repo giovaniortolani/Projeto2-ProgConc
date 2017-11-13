@@ -29,7 +29,7 @@ void swap_lines(float *myCols, int psize, int oldPivot, int newPivot) {
 void pivotize(float *myCols, float pivot, int psize, int line) {
 	int i;	
 
-	//#pragma omp parallel for 
+	//#pragma omp parallel for if(OPENMP == TRUE)
 	for (i = 0; i < psize; i++) {
 		myCols[psize * line + i] = myCols[psize * line + i] / pivot; 
 	}
@@ -38,7 +38,7 @@ void pivotize(float *myCols, float pivot, int psize, int line) {
 void scale(float *myCols, float *pivotCol, int dimension, int psize, int line) {
 	int i, j;
 
-	//#pragma omp parallel for collapse(2)
+	//#pragma omp parallel for
 	for (i = 0; i < psize; i++) {
 		for (j = 0; j < dimension; j++) {
 			if (j != line) myCols[j * psize + i] -= pivotCol[j] * myCols[line * psize + i];
@@ -66,6 +66,7 @@ void solution(float *myCols, int dimension, int npes, int myrank, float *solutio
 			pivotIdx = k;
 			innerOffset = k % psize;
 			// Copia a coluna pivô para um vetor unico;
+			#pragma omp parallel for private(i)
 			for (i = 0; i < dimension; i++) {
 				pivotCol[i] = myCols[i * psize + innerOffset];
 			}
@@ -79,6 +80,7 @@ void solution(float *myCols, int dimension, int npes, int myrank, float *solutio
 				}
 			}
 		}
+
 		// Bcast do indice do pivô atual (pivotIdx)
 		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
 		root = process_of_column(k, npes, dimension);

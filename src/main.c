@@ -32,10 +32,13 @@ int main (int argc, char **argv) {
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
 
     double stime, etime;
-    
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    stime = MPI_Wtime();
 
     if (myrank == 0) {
         if (argc == 1) {
@@ -43,16 +46,16 @@ int main (int argc, char **argv) {
             if (dimension % npes != 0) {
                 printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
                 destroy_matrix(matrix);
-                fflush(0);
                 MPI_Finalize();
+                fflush(0);
                 exit(1);
             }
         } else {
             dimension = atoi(argv[1]);
             if (dimension % npes != 0) {
                 printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
-                fflush(0);
                 MPI_Finalize();
+                fflush(0);
                 exit(1);
             }
             matrix = create_matrix(dimension);
@@ -99,10 +102,7 @@ int main (int argc, char **argv) {
     //}
 
     // Solução Paralela
-    stime = MPI_Wtime();
     solution(myCols, dimension, npes, myrank, solutionArray);
-    etime = MPI_Wtime();
-    printf("time = %f\n", etime - stime);
 
     // Solução Sequencial
     // solution_sequential(matrix, dimension);
@@ -116,13 +116,22 @@ int main (int argc, char **argv) {
         // for (i = 0; i < dimension; i++) printf("%f \n", solutionArray[i]);
         // printf("\n");
 
-        write_result(dimension, solutionArray);
+        //write_result(dimension, solutionArray);
         destroy_local_cols(solutionArray);
         destroy_matrix(matrix);
     }
     destroy_local_cols(myCols);
 
+    MPI_Barrier(MPI_COMM_WORLD); /* IMPORTANT */
+    etime = MPI_Wtime();
+
     MPI_Finalize();
+
+    if (myrank == 0){
+        printf("NPES = %d, Dim = %d\tTime = %f\n", npes, dimension, etime - stime);
+    }
     
+    // ...
+    // that's all folks!
     return 0;
 }
