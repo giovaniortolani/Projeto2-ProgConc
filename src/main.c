@@ -30,6 +30,8 @@ int main (int argc, char **argv) {
     int npes, myrank;
     float *matrix, *myCols;
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
+
+    double stime, etime;
     
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
@@ -55,6 +57,7 @@ int main (int argc, char **argv) {
             }
             matrix = create_matrix(dimension);
         }
+        //print_matrix(dimension, matrix);
     }
     MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -78,22 +81,31 @@ int main (int argc, char **argv) {
     MPI_Scatter(matrix, count, sendColType, myCols, count, recvColType, 0, MPI_COMM_WORLD);
 
     // Debug
-    if (myrank == 0){
-        for (i = 0; i < (groupSize * dimension); i++) {
-            printf("%f, ", myCols[i]);
-        }
-        printf("\n");
-    }
+    // if (myrank == 0){
+    //     for (i = 0; i < (groupSize * dimension); i++) {
+    //         printf("%f, ", myCols[i]);
+    //     }
+    //     printf("\n");
+    // }
 
     // Solução Paralela
+    stime = MPI_Wtime();
     solution(myCols, dimension, npes, myrank);
+    etime = MPI_Wtime();
+    printf("time = %f\n", etime - stime);
     // Solução Sequencial
     // solution_sequential(matrix, dimension);
 
     //for debugging purposes
     // print_matrix(dimension, matrix);
 
+    MPI_Gather(myCols, count, recvColType, matrix, count, sendColType, 0, MPI_COMM_WORLD);
+
+
+    //for debugging purposes
+
     if (myrank == 0) {
+        //print_matrix(dimension, matrix);
         write_result(dimension, matrix);
         destroy_matrix(matrix);
     }

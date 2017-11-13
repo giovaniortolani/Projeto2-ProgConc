@@ -2,7 +2,7 @@ NPES=2
 DIM=4
 
 all:
-	@mpicc src/main.c src/gauss.c src/matrix.c -o bin/gaussjordan -fopenmp -Wall 
+	@mpicc src/main.c src/gauss.c src/matrix.c -o bin/gaussjordan -lm -fopenmp -Wall 
 
 clean:
 	@rm -rf *.o *~ bin/*

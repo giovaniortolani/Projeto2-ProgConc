@@ -26,13 +26,21 @@ void swap_lines(float *myCols, int psize, int oldPivot, int newPivot) {
 	}
 }
 
-void pivotize() {
-
+void pivotize(float *myCols, float pivot, int psize, int line) {
+	int i;	
+	for (i = 0; i < psize; i++) {
+		myCols[psize * line + i] = myCols[psize * line + i] / pivot; 
+	}
 }
 
-void scale() {
-
-}dimension
+void scale(float *myCols, float *pivotCol, int dimension, int psize, int line) {
+	int i, j;
+	for (i = 0; i < psize; i++) {
+		for (j = 0; j < dimension; j++) {
+			if (j != line) myCols[j * psize + i] -= pivotCol[j] * myCols[line * psize + i];
+		}
+	}
+}
 
 int process_of_column(int column, int npes, int dimension) {
 	return (column * npes / dimension);
@@ -45,19 +53,20 @@ int my_column(int column, int dimension, int npes, int myrank) {
 
 void solution(float *myCols, int dimension, int npes, int myrank) {
 	int i, k, psize, innerOffset, pivotIdx, root;
-	float *pivotCol;
+	float *pivotCol, pivot;
 	pivotCol = (float*) calloc(dimension, sizeof(float));
 
 	for (k = 0; k < dimension; k++) {
+		psize = dimension / npes;
 		if (my_column(k, dimension, npes, myrank)) {	// Processo corrente tem pivot atual
+			//printf("rank: %d\n", myrank);
 			pivotIdx = k;
-			psize = dimension / npes;
 			innerOffset = k % psize;
-			
 			// Copia a coluna pivô para um vetor unico;
 			for (i = 0; i < dimension; i++) {
 				pivotCol[i] = myCols[i * psize + innerOffset];
 			}
+			pivot = pivotCol[k];
 
 			if (pivotCol[k] == 0) { 				// swap lines
 				for (i = 0; i < dimension; i++) {	// procura novo pivot não nulo
@@ -66,6 +75,7 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 					}
 				}
 			}
+			
 
 		}
 		// Bcast do indice do pivô atual (pivotIdx)
@@ -77,8 +87,21 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 			swap_lines(myCols, psize, k, pivotIdx);
 		}
 
-		pivotize();
-		scale();
+		// Bcast do do pivô atual para pivoteamento
+		// Root não mudou
+		MPI_Bcast(&pivot, 1, MPI_FLOAT, root, MPI_COMM_WORLD);
+
+		//printf("myCols[k]: %f, psize: %d, pivot: %f rank: %d\n", myCols[k], psize, pivot, myrank);
+
+		pivotize(myCols, pivot, psize, k);
+
+		// Bcast da coluna que possui o pivô
+		// Root ainda não mudou
+		 MPI_Bcast(pivotCol, dimension, MPI_FLOAT, root, MPI_COMM_WORLD);
+		//printf("root: %d, myCols[k]: %f, psize: %d, pivotCol[k]: %f rank: %d\n", root, myCols[k], psize, pivotCol[k], myrank);
+		  scale(myCols, pivotCol, dimension, psize, k);
+		//  for (i = 0; i < dimension; i++) printf("%f \n", pivotCol[i]);
+		//  printf("\n");
 
 	}
 }

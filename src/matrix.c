@@ -13,6 +13,7 @@
 #include <time.h>
 #include <mpi.h>
 #include <omp.h>
+#include <math.h>
 #include "matrix.h"
 
 float* read_matrix(int *dimension) {
@@ -95,7 +96,7 @@ void print_matrix(int dimension, float *m) {
     int i, j;
     for (i = 0; i < dimension; i++) {
         for (j = 0; j <= dimension; j++) {
-            printf("%f ", m[i * (dimension + 1) + j]);
+            printf("%f ", fabs(m[i * (dimension + 1) + j]));
         }
         printf("\n");
     }
@@ -113,7 +114,7 @@ void write_result(int dimension, float *matrix){
 
 float* create_local_cols(int colsNum, int dimension) {
     float *myCols;
-    myCols = (float *) calloc(colsNum * dimension, sizeof(float));
+    myCols = (float *) malloc(colsNum * dimension * sizeof(float));
     return myCols;
 }
 
