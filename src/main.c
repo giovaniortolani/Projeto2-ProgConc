@@ -28,7 +28,7 @@
 int main (int argc, char **argv) {
     int dimension = 0, groupSize, count, i;
     int npes, myrank;
-    float *matrix, *myCols;
+    float *matrix, *myCols, *solutionArray;
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
 
     double stime, etime;
@@ -57,11 +57,21 @@ int main (int argc, char **argv) {
             }
             matrix = create_matrix(dimension);
         }
-        //print_matrix(dimension, matrix);
+        // For debbuging ...
+        // print_matrix(dimension, matrix);
     }
     MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
     groupSize = dimension / npes;
+
+    if (!myrank) {
+        solutionArray = (float *) malloc(dimension * sizeof(float));
+        for (i = 0; i < dimension; i++) {
+            solutionArray[i] = matrix[dimension + i * (dimension + 1)];
+        }
+    } 
+    else {
+        solutionArray = NULL;
+    }
 
     // Cria matriz (em forma de vetor) onde um processo recebe suas colunas
     myCols = create_local_cols(groupSize, dimension);
@@ -80,36 +90,38 @@ int main (int argc, char **argv) {
     count = groupSize;
     MPI_Scatter(matrix, count, sendColType, myCols, count, recvColType, 0, MPI_COMM_WORLD);
 
-    // Debug
-    // if (myrank == 0){
-    //     for (i = 0; i < (groupSize * dimension); i++) {
-    //         printf("%f, ", myCols[i]);
-    //     }
-    //     printf("\n");
-    // }
+    // For debbuging ...
+    //if (myrank == 0){
+        // for (i = 0; i < dimension * (groupSize + 1); i++) {
+        //     printf("Rank=%d, %f\n", myrank, myCols[i]);
+        // }
+        // printf("\n");
+    //}
 
     // Solução Paralela
     stime = MPI_Wtime();
-    solution(myCols, dimension, npes, myrank);
+    solution(myCols, dimension, npes, myrank, solutionArray);
     etime = MPI_Wtime();
     printf("time = %f\n", etime - stime);
+
     // Solução Sequencial
     // solution_sequential(matrix, dimension);
 
-    //for debugging purposes
-    // print_matrix(dimension, matrix);
-
-    MPI_Gather(myCols, count, recvColType, matrix, count, sendColType, 0, MPI_COMM_WORLD);
-
-
-    //for debugging purposes
+    // For debbuging ...
+    // MPI_Gather(myCols, count, recvColType, matrix, count, sendColType, 0, MPI_COMM_WORLD);
 
     if (myrank == 0) {
-        //print_matrix(dimension, matrix);
-        write_result(dimension, matrix);
+        // For debugging ...
+        // print_matrix(dimension, matrix);
+        // for (i = 0; i < dimension; i++) printf("%f \n", solutionArray[i]);
+        // printf("\n");
+
+        write_result(dimension, solutionArray);
+        destroy_local_cols(solutionArray);
         destroy_matrix(matrix);
     }
     destroy_local_cols(myCols);
+
     MPI_Finalize();
     
     return 0;

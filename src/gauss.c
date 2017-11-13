@@ -28,6 +28,8 @@ void swap_lines(float *myCols, int psize, int oldPivot, int newPivot) {
 
 void pivotize(float *myCols, float pivot, int psize, int line) {
 	int i;	
+
+	//#pragma omp parallel for 
 	for (i = 0; i < psize; i++) {
 		myCols[psize * line + i] = myCols[psize * line + i] / pivot; 
 	}
@@ -35,6 +37,8 @@ void pivotize(float *myCols, float pivot, int psize, int line) {
 
 void scale(float *myCols, float *pivotCol, int dimension, int psize, int line) {
 	int i, j;
+
+	//#pragma omp parallel for collapse(2)
 	for (i = 0; i < psize; i++) {
 		for (j = 0; j < dimension; j++) {
 			if (j != line) myCols[j * psize + i] -= pivotCol[j] * myCols[line * psize + i];
@@ -51,7 +55,7 @@ int my_column(int column, int dimension, int npes, int myrank) {
 	return 0;
 }
 
-void solution(float *myCols, int dimension, int npes, int myrank) {
+void solution(float *myCols, int dimension, int npes, int myrank, float *solutionArray) {
 	int i, k, psize, innerOffset, pivotIdx, root;
 	float *pivotCol, pivot;
 	pivotCol = (float*) calloc(dimension, sizeof(float));
@@ -59,7 +63,6 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 	for (k = 0; k < dimension; k++) {
 		psize = dimension / npes;
 		if (my_column(k, dimension, npes, myrank)) {	// Processo corrente tem pivot atual
-			//printf("rank: %d\n", myrank);
 			pivotIdx = k;
 			innerOffset = k % psize;
 			// Copia a coluna pivô para um vetor unico;
@@ -75,8 +78,6 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 					}
 				}
 			}
-			
-
 		}
 		// Bcast do indice do pivô atual (pivotIdx)
 		// Se não tiver que trocar, os processo serão capazes de perceber que o pivotIdx == k
@@ -85,29 +86,33 @@ void solution(float *myCols, int dimension, int npes, int myrank) {
 
 		if (pivotIdx != k) {	// Necessidade de trocar o pivot
 			swap_lines(myCols, psize, k, pivotIdx);
+			if (!myrank) swap_lines(solutionArray, 1, k, pivotIdx);
 		}
 
 		// Bcast do do pivô atual para pivoteamento
 		// Root não mudou
 		MPI_Bcast(&pivot, 1, MPI_FLOAT, root, MPI_COMM_WORLD);
 
+		// For debbuging ...
 		//printf("myCols[k]: %f, psize: %d, pivot: %f rank: %d\n", myCols[k], psize, pivot, myrank);
 
 		pivotize(myCols, pivot, psize, k);
+		if (!myrank) pivotize(solutionArray, pivot, 1, k);
 
 		// Bcast da coluna que possui o pivô
 		// Root ainda não mudou
-		 MPI_Bcast(pivotCol, dimension, MPI_FLOAT, root, MPI_COMM_WORLD);
-		//printf("root: %d, myCols[k]: %f, psize: %d, pivotCol[k]: %f rank: %d\n", root, myCols[k], psize, pivotCol[k], myrank);
-		  scale(myCols, pivotCol, dimension, psize, k);
-		//  for (i = 0; i < dimension; i++) printf("%f \n", pivotCol[i]);
-		//  printf("\n");
+		MPI_Bcast(pivotCol, dimension, MPI_FLOAT, root, MPI_COMM_WORLD);
 
+		// For debbuging ...
+		//printf("root: %d, myCols[k]: %f, psize: %d, pivotCol[k]: %f rank: %d\n", root, myCols[k], psize, pivotCol[k], myrank);
+		
+		scale(myCols, pivotCol, dimension, psize, k);
+		if (!myrank) scale(solutionArray, pivotCol, dimension, 1, k);
 	}
+	free(pivotCol);
 }
 
 void swap_line_sequential(int line, int dimension, float *matrix) {
-
 	int swap = 0;
 	int aux;
 	int i;
@@ -128,8 +133,6 @@ void swap_line_sequential(int line, int dimension, float *matrix) {
 			matrix[line * (dimension + 1) + i] = matrix[swap * (dimension + 1) + i];
 			matrix[swap * (dimension + 1) + i] = aux;
 		}
-		
-		
 	}
 }
 
@@ -140,8 +143,7 @@ void pivotize_sequential(int line, int dimension, float *matrix) {
     
     for (i = 0; i <= dimension; i++) {
 		matrix[line * (dimension + 1) + i] /= divisor;
-	}
-    
+	} 
 }
 
 void scale_sequential(int line, int dimension, float *matrix) {

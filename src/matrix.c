@@ -102,13 +102,13 @@ void print_matrix(int dimension, float *m) {
     }
 }
 
-void write_result(int dimension, float *matrix){
+void write_result(int dimension, float *solutionArray){
     
     FILE *arq = fopen("out/resultado.txt", "w");
     int i;
     
     for (i = 0; i < dimension; i++){
-        fprintf(arq, "%f\n", matrix[i * (dimension + 1) + dimension]);
+        fprintf(arq, "%f\n", solutionArray[i]);
     }
 }
 
