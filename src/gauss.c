@@ -26,19 +26,19 @@ void swap_lines(float *myCols, int psize, int oldPivot, int newPivot) {
 	}
 }
 
-void pivotize(float *myCols, float pivot, int psize, int line) {
+void pivotize(float *myCols, float pivot, int psize, int line, int OPENMP) {
 	int i;	
 
-	//#pragma omp parallel for if(OPENMP == TRUE)
+	#pragma omp parallel for private(i) if(OPENMP)
 	for (i = 0; i < psize; i++) {
 		myCols[psize * line + i] = myCols[psize * line + i] / pivot; 
 	}
 }
 
-void scale(float *myCols, float *pivotCol, int dimension, int psize, int line) {
+void scale(float *myCols, float *pivotCol, int dimension, int psize, int line, int OPENMP) {
 	int i, j;
 
-	//#pragma omp parallel for
+	#pragma omp parallel for private(i, j) if(OPENMP)
 	for (i = 0; i < psize; i++) {
 		for (j = 0; j < dimension; j++) {
 			if (j != line) myCols[j * psize + i] -= pivotCol[j] * myCols[line * psize + i];
@@ -55,18 +55,18 @@ int my_column(int column, int dimension, int npes, int myrank) {
 	return 0;
 }
 
-void solution(float *myCols, int dimension, int npes, int myrank, float *solutionArray) {
+void solution(float *myCols, int dimension, int npes, int myrank, float *solutionArray, int OPENMP) {
 	int i, k, psize, innerOffset, pivotIdx, root;
 	float *pivotCol, pivot;
-	pivotCol = (float*) calloc(dimension, sizeof(float));
 
+	pivotCol = (float*) calloc(dimension, sizeof(float));
+	
 	for (k = 0; k < dimension; k++) {
 		psize = dimension / npes;
 		if (my_column(k, dimension, npes, myrank)) {	// Processo corrente tem pivot atual
 			pivotIdx = k;
 			innerOffset = k % psize;
 			// Copia a coluna pivô para um vetor unico;
-			#pragma omp parallel for private(i)
 			for (i = 0; i < dimension; i++) {
 				pivotCol[i] = myCols[i * psize + innerOffset];
 			}
@@ -88,7 +88,9 @@ void solution(float *myCols, int dimension, int npes, int myrank, float *solutio
 
 		if (pivotIdx != k) {	// Necessidade de trocar o pivot
 			swap_lines(myCols, psize, k, pivotIdx);
-			if (!myrank) swap_lines(solutionArray, 1, k, pivotIdx);
+			if (!myrank) {
+				swap_lines(solutionArray, 1, k, pivotIdx);
+			}
 		}
 
 		// Bcast do do pivô atual para pivoteamento
@@ -98,8 +100,8 @@ void solution(float *myCols, int dimension, int npes, int myrank, float *solutio
 		// For debbuging ...
 		//printf("myCols[k]: %f, psize: %d, pivot: %f rank: %d\n", myCols[k], psize, pivot, myrank);
 
-		pivotize(myCols, pivot, psize, k);
-		if (!myrank) pivotize(solutionArray, pivot, 1, k);
+		pivotize(myCols, pivot, psize, k, OPENMP);
+		if (!myrank) pivotize(solutionArray, pivot, 1, k, OPENMP);
 
 		// Bcast da coluna que possui o pivô
 		// Root ainda não mudou
@@ -108,12 +110,13 @@ void solution(float *myCols, int dimension, int npes, int myrank, float *solutio
 		// For debbuging ...
 		//printf("root: %d, myCols[k]: %f, psize: %d, pivotCol[k]: %f rank: %d\n", root, myCols[k], psize, pivotCol[k], myrank);
 		
-		scale(myCols, pivotCol, dimension, psize, k);
-		if (!myrank) scale(solutionArray, pivotCol, dimension, 1, k);
+		scale(myCols, pivotCol, dimension, psize, k, OPENMP);
+		if (!myrank) scale(solutionArray, pivotCol, dimension, 1, k, OPENMP);
 	}
 	free(pivotCol);
 }
 
+// For debbuging ...
 void swap_line_sequential(int line, int dimension, float *matrix) {
 	int swap = 0;
 	int aux;

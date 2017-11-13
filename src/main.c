@@ -15,19 +15,10 @@
 #include "gauss.h"
 #include "matrix.h"
 
-/* 
-    Para rodar com a matriz do professor. 
-        $ make run
-    Para rodar com uma matriz de dimensao N com M processos.
-        $ make run NPES=<M> DIM=<N>
-        Ex: $ make run NPES=2 DIM=4
-*/
-
-// LEMBRAR QUE A RESPOSTA DEVE ESTAR NA ORDEM ORIGINAL MESMO APOS A TROCA DE LINHA
-
 int main (int argc, char **argv) {
     int dimension = 0, groupSize, count, i;
     int npes, myrank;
+    int num_treads;
     float *matrix, *myCols, *solutionArray;
     MPI_Datatype sendCol, sendColType, recvCol, recvColType;
 
@@ -39,9 +30,8 @@ int main (int argc, char **argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     stime = MPI_Wtime();
-
     if (myrank == 0) {
-        if (argc == 1) {
+        if (argc == 2) {
             matrix = read_matrix(&dimension);
             if (dimension % npes != 0) {
                 printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
@@ -50,8 +40,9 @@ int main (int argc, char **argv) {
                 fflush(0);
                 exit(1);
             }
-        } else {
-            dimension = atoi(argv[1]);
+        } 
+        else {
+            dimension = atoi(argv[2]);
             if (dimension % npes != 0) {
                 printf("Dimensão da matriz não divisível pela quantidade de processos.\n");
                 MPI_Finalize();
@@ -60,9 +51,12 @@ int main (int argc, char **argv) {
             }
             matrix = create_matrix(dimension);
         }
-        // For debbuging ...
-        // print_matrix(dimension, matrix);
+        //For debbuging ...
+        //print_matrix(dimension, matrix);
     }
+    num_treads = atoi(argv[1]);
+    omp_set_num_threads(num_treads); 
+
     MPI_Bcast(&dimension, 1, MPI_INT, 0, MPI_COMM_WORLD);
     groupSize = dimension / npes;
 
@@ -102,7 +96,7 @@ int main (int argc, char **argv) {
     //}
 
     // Solução Paralela
-    solution(myCols, dimension, npes, myrank, solutionArray);
+    solution(myCols, dimension, npes, myrank, solutionArray, num_treads);
 
     // Solução Sequencial
     // solution_sequential(matrix, dimension);
@@ -116,7 +110,7 @@ int main (int argc, char **argv) {
         // for (i = 0; i < dimension; i++) printf("%f \n", solutionArray[i]);
         // printf("\n");
 
-        //write_result(dimension, solutionArray);
+        write_result(dimension, solutionArray);
         destroy_local_cols(solutionArray);
         destroy_matrix(matrix);
     }
@@ -128,7 +122,7 @@ int main (int argc, char **argv) {
     MPI_Finalize();
 
     if (myrank == 0){
-        printf("NPES = %d, Dim = %d\tTime = %f\n", npes, dimension, etime - stime);
+        printf("NPes = %d, Dim = %d, Time = %f, NThreads = %d\n", npes, dimension, etime - stime, num_treads);
     }
     
     // ...

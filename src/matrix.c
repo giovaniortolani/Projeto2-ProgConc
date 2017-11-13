@@ -59,31 +59,33 @@ float* create_matrix(int dimension) {
 
     int i, j;
     float *matrix;
-    FILE *matrixInput, *arrayInput;
+    
+    // For debbuging ...
+    //FILE *matrixInput, *arrayInput;
 
-    matrixInput = fopen("in/matriz_maior.txt", "w");
-    arrayInput= fopen("in/vetor_maior.txt", "w");
-    if (matrixInput == NULL || arrayInput == NULL) {
-        printf("Erro ao abrir arquivos\n");
-        exit (1);
-    }
+    // matrixInput = fopen("in/matriz_maior.txt", "w");
+    // arrayInput= fopen("in/vetor_maior.txt", "w");
+    // if (matrixInput == NULL || arrayInput == NULL) {
+    //     printf("Erro ao abrir arquivos\n");
+    //     exit (1);
+    // }
 
     matrix = (float *) malloc(sizeof(float) * dimension * (dimension + 1));
     for (i = 0; i < dimension; i++) {
         for (j = 0; j < dimension + 1; j++) {
             matrix[i * (dimension + 1) + j] = rand() % 50;
-            if (j != dimension) { 
-                fprintf(matrixInput, "%.4f ", matrix[i * (dimension + 1) + j]);            
-            }
-            else {
-                fprintf(arrayInput, "%.4f\n", matrix[i * (dimension + 1) + j]);
-                fprintf(matrixInput, "\n");            
-            }
+            // if (j != dimension) { 
+            //     fprintf(matrixInput, "%.4f ", matrix[i * (dimension + 1) + j]);            
+            // }
+            // else {
+            //     fprintf(arrayInput, "%.4f\n", matrix[i * (dimension + 1) + j]);
+            //     fprintf(matrixInput, "\n");            
+            // }
         }
     }
 
-    fclose(matrixInput);
-    fclose(arrayInput);
+    // fclose(matrixInput);
+    // fclose(arrayInput);
 
     return matrix;
 }
@@ -108,7 +110,7 @@ void write_result(int dimension, float *solutionArray){
     int i;
     
     for (i = 0; i < dimension; i++){
-        fprintf(arq, "%f\n", solutionArray[i]);
+        fprintf(arq, "%.3f\n", solutionArray[i]);
     }
 }
 
