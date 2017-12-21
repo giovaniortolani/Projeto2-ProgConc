@@ -129,3 +129,8 @@ int main (int argc, char **argv) {
     // that's all folks!
     return 0;
 }
+
+for (int i = 0; i < count; ++i)
+{
+    /* code */
+}
